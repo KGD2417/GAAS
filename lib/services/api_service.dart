@@ -1,48 +1,78 @@
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://api.gaas.com'; // Replace with actual API
+  static final String baseUrl = "https://5765e1a915fa.ngrok-free.app";
 
-  // Placeholder function for starting training job
-  static Future<bool> startTraining({
+  // returns jobId on success
+  static Future<String?> startTraining({
     required String gpuSize,
-    required String? datasetPath,
-    required String? modelPath,
-    required String? pythonCode,
-    required String requirements,
+    String? datasetPath,
+    String? modelPath,
+    String? dockerfilePath,
+    String? runShPath,
+    String? requirements,
+    String? pythonCode, // ✅ NEW
   }) async {
-    try {
-      print('🚀 Starting training with:');
-      print('   GPU Size: $gpuSize');
-      print('   Dataset: $datasetPath');
-      print('   Model: $modelPath');
-      print('   Python Code Length: ${pythonCode?.length ?? 0}');
-      print('   Requirements: $requirements');
+    var uri = Uri.parse('$baseUrl/api/v1/jobs');
+    var request = http.MultipartRequest('POST', uri);
 
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+    request.fields['gpu_size'] = gpuSize;
 
-      // Uncomment when backend is ready:
-      /*
-      final response = await http.post(
-        Uri.parse('$baseUrl/train'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'gpu_size': gpuSize,
-          'dataset_path': datasetPath,
-          'model_path': modelPath,
-          'python_code': pythonCode,
-          'requirements': requirements,
-        }),
-      );
-      return response.statusCode == 200;
-      */
-
-      return true; // Mock success
-    } catch (e) {
-      print('❌ Error: $e');
-      return false;
+    if (requirements != null) request.fields['requirements_txt'] = requirements;
+    if (pythonCode != null && pythonCode.isNotEmpty) {
+      request.fields['python_code'] = pythonCode; // ✅ add main.py code
     }
+
+    if (dockerfilePath != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'dockerfile',
+          dockerfilePath,
+          filename: 'Dockerfile',
+        ),
+      );
+    }
+    if (runShPath != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'run_sh',
+          runShPath,
+          filename: 'run.sh',
+        ),
+      );
+    }
+    if (datasetPath != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('dataset', datasetPath),
+      );
+    }
+    if (modelPath != null) {
+      request.files.add(await http.MultipartFile.fromPath('model', modelPath));
+    }
+
+    try {
+      var streamedResp = await request.send();
+      var resp = await http.Response.fromStream(streamedResp);
+      if (resp.statusCode == 202) {
+        var data = json.decode(resp.body);
+        return data['job_id'] as String?;
+      } else {
+        print('startTraining failed: ${resp.statusCode} ${resp.body}');
+        return null;
+      }
+    } catch (e) {
+      print('startTraining error: $e');
+      return null;
+    }
+  }
+
+  // Connect to logs via WebSocket
+  static WebSocketChannel connectLogs(String jobId) {
+    final wsUrl =
+        baseUrl.replaceFirst('http', 'ws') + '/api/v1/jobs/$jobId/logs/ws';
+    return WebSocketChannel.connect(Uri.parse(wsUrl));
   }
 }

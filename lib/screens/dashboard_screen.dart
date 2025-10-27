@@ -17,7 +17,8 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> with TickerProviderStateMixin {
+class _DashboardScreenState extends State<DashboardScreen>
+    with TickerProviderStateMixin {
   int _selectedIndex = 0;
   String _selectedGpu = 'Medium';
   String? _datasetPath;
@@ -54,9 +55,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   Future<void> _pickFile(bool isDataset) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: isDataset
-          ? ['csv', 'zip', 'json', 'txt']
-          : ['py', 'ipynb'],
+      allowedExtensions:
+          isDataset ? ['csv', 'zip', 'json', 'txt'] : ['py', 'ipynb'],
     );
 
     if (result != null) {
@@ -88,7 +88,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     );
 
     if (mounted) {
-      if (success) {
+      if (success != null) {
         _showSuccessDialog();
       } else {
         _showErrorDialog('Failed to start training');
@@ -101,191 +101,209 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     final price = gpuPrices[_selectedGpu]!;
 
     return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => _ModernDialog(
-        title: 'Start Training?',
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.cyan.withOpacity(0.1),
-                    AppColors.cyanDark.withOpacity(0.1),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppColors.cyan.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.memory,
-                    size: 60,
-                    color: AppColors.cyan,
-                  ).animate(onPlay: (controller) => controller.repeat())
-                      .shimmer(duration: 2000.ms, color: AppColors.cyan.withOpacity(0.3)),
-                  const SizedBox(height: 16),
-                  Text(
-                    _selectedGpu,
-                    style: AppStyles.heading2.copyWith(color: AppColors.cyan),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '\$$price/hour',
-                    style: AppStyles.body.copyWith(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            _InfoRow(
-              icon: Icons.dataset,
-              label: 'Dataset',
-              value: _datasetPath?.split('/').last ?? 'Code only',
-            ),
-            const SizedBox(height: 12),
-            _InfoRow(
-              icon: Icons.code,
-              label: 'Model',
-              value: _modelPath?.split('/').last ?? 'Inline code',
-            ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.warning.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: AppColors.warning, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'You will be charged based on actual usage time',
-                      style: AppStyles.body.copyWith(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: AppColors.textSecondary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+          context: context,
+          barrierDismissible: false,
+          builder:
+              (context) => _ModernDialog(
+                title: 'Start Training?',
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.cyan.withOpacity(0.1),
+                            AppColors.cyanDark.withOpacity(0.1),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.cyan.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.memory, size: 60, color: AppColors.cyan)
+                              .animate(
+                                onPlay: (controller) => controller.repeat(),
+                              )
+                              .shimmer(
+                                duration: 2000.ms,
+                                color: AppColors.cyan.withOpacity(0.3),
+                              ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _selectedGpu,
+                            style: AppStyles.heading2.copyWith(
+                              color: AppColors.cyan,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '\$$price/hour',
+                            style: AppStyles.body.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Text('Cancel', style: AppStyles.body),
-                  ),
+                    const SizedBox(height: 24),
+                    _InfoRow(
+                      icon: Icons.dataset,
+                      label: 'Dataset',
+                      value: _datasetPath?.split('/').last ?? 'Code only',
+                    ),
+                    const SizedBox(height: 12),
+                    _InfoRow(
+                      icon: Icons.code,
+                      label: 'Model',
+                      value: _modelPath?.split('/').last ?? 'Inline code',
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.warning.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: AppColors.warning,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'You will be charged based on actual usage time',
+                              style: AppStyles.body.copyWith(fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              side: BorderSide(color: AppColors.textSecondary),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text('Cancel', style: AppStyles.body),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: GlowingButton(
+                            text: 'Start Training',
+                            onPressed: () => Navigator.pop(context, true),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: GlowingButton(
-                    text: 'Start Training',
-                    onPressed: () => Navigator.pop(context, true),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ) ?? false;
+              ),
+        ) ??
+        false;
   }
 
   void _showSuccessDialog() {
     showDialog(
       context: context,
-      builder: (context) => _ModernDialog(
-        title: 'Training Started!',
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.success.withOpacity(0.3),
-                    AppColors.success.withOpacity(0.0),
-                  ],
+      builder:
+          (context) => _ModernDialog(
+            title: 'Training Started!',
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.success.withOpacity(0.3),
+                        AppColors.success.withOpacity(0.0),
+                      ],
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.check_circle,
+                    size: 80,
+                    color: AppColors.success,
+                  ),
+                ).animate().scale(duration: 500.ms).then().shimmer(),
+                const SizedBox(height: 24),
+                Text(
+                  'Your model is now training on the cloud',
+                  style: AppStyles.body,
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              child: Icon(
-                Icons.check_circle,
-                size: 80,
-                color: AppColors.success,
-              ),
-            ).animate().scale(duration: 500.ms).then().shimmer(),
-            const SizedBox(height: 24),
-            Text(
-              'Your model is now training on the cloud',
-              style: AppStyles.body,
-              textAlign: TextAlign.center,
+                const SizedBox(height: 8),
+                Text(
+                  'Check the Trainer tab for progress',
+                  style: AppStyles.body.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                GlowingButton(
+                  text: 'View Progress',
+                  onPressed: () {
+                    Navigator.pop(context);
+                    setState(() => _selectedIndex = 1);
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Check the Trainer tab for progress',
-              style: AppStyles.body.copyWith(color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            GlowingButton(
-              text: 'View Progress',
-              onPressed: () {
-                Navigator.pop(context);
-                setState(() => _selectedIndex = 1);
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder: (context) => _ModernDialog(
-        title: 'Error',
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline, size: 60, color: AppColors.error),
-            const SizedBox(height: 16),
-            Text(message, style: AppStyles.body, textAlign: TextAlign.center),
-            const SizedBox(height: 24),
-            GlowingButton(
-              text: 'OK',
-              onPressed: () => Navigator.pop(context),
-              color: AppColors.error,
+      builder:
+          (context) => _ModernDialog(
+            title: 'Error',
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.error_outline, size: 60, color: AppColors.error),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  style: AppStyles.body,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                GlowingButton(
+                  text: 'OK',
+                  onPressed: () => Navigator.pop(context),
+                  color: AppColors.error,
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -358,11 +376,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                 ],
               ),
             ),
-            child: Icon(
-              Icons.memory,
-              size: 80,
-              color: AppColors.cyan,
-            ),
+            child: Icon(Icons.memory, size: 80, color: AppColors.cyan),
           ),
         );
       },
@@ -373,8 +387,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Select GPU Configuration', style: AppStyles.heading2)
-            .animate().fadeIn(),
+        Text(
+          'Select GPU Configuration',
+          style: AppStyles.heading2,
+        ).animate().fadeIn(),
         const SizedBox(height: 8),
         Text(
           'Choose the perfect GPU for your workload',
@@ -412,7 +428,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                 size: GPUSize.medium,
                 rotationController: _rotationController,
                 pulseController: _pulseController,
-                isRecommended: true ,
+                isRecommended: true,
               ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
             ),
             const SizedBox(width: 20),
@@ -446,23 +462,25 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         Row(
           children: [
             Expanded(
-              child: _ModernFileUploadBox(
-                label: 'Training Dataset',
-                subtitle: 'CSV, ZIP, JSON, TXT',
-                icon: Icons.dataset,
-                fileName: _datasetPath?.split('/').last,
-                onTap: () => _pickFile(true),
-              ).animate().fadeIn(delay: 400.ms).slideX(),
+              child:
+                  _ModernFileUploadBox(
+                    label: 'Training Dataset',
+                    subtitle: 'CSV, ZIP, JSON, TXT',
+                    icon: Icons.dataset,
+                    fileName: _datasetPath?.split('/').last,
+                    onTap: () => _pickFile(true),
+                  ).animate().fadeIn(delay: 400.ms).slideX(),
             ),
             const SizedBox(width: 20),
             Expanded(
-              child: _ModernFileUploadBox(
-                label: 'Model Code',
-                subtitle: 'Python (.py, .ipynb)',
-                icon: Icons.code,
-                fileName: _modelPath?.split('/').last,
-                onTap: () => _pickFile(false),
-              ).animate().fadeIn(delay: 500.ms).slideX(),
+              child:
+                  _ModernFileUploadBox(
+                    label: 'Model Code',
+                    subtitle: 'Python (.py, .ipynb)',
+                    icon: Icons.code,
+                    fileName: _modelPath?.split('/').last,
+                    onTap: () => _pickFile(false),
+                  ).animate().fadeIn(delay: 500.ms).slideX(),
             ),
           ],
         ),
@@ -476,10 +494,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.cyan.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.cyan.withOpacity(0.2), width: 1),
       ),
       child: Row(
         children: [
@@ -533,7 +548,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               fontSize: 14,
             ),
             decoration: const InputDecoration(
-              hintText: '# Paste your Python code here...\nimport torch\nimport torch.nn as nn\n\nclass MyModel(nn.Module):\n    def __init__(self):\n        super().__init__()\n        # Your model architecture',
+              hintText:
+                  '# Paste your Python code here...\nimport torch\nimport torch.nn as nn\n\nclass MyModel(nn.Module):\n    def __init__(self):\n        super().__init__()\n        # Your model architecture',
               hintStyle: TextStyle(color: AppColors.textTertiary),
               border: InputBorder.none,
             ),
@@ -547,7 +563,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Dependencies & Setup', style: AppStyles.heading3).animate().fadeIn(),
+        Text(
+          'Dependencies & Setup',
+          style: AppStyles.heading3,
+        ).animate().fadeIn(),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(20),
@@ -568,7 +587,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               fontSize: 14,
             ),
             decoration: const InputDecoration(
-              hintText: 'pip install torch torchvision\npip install pandas numpy scikit-learn\npip install transformers',
+              hintText:
+                  'pip install torch torchvision\npip install pandas numpy scikit-learn\npip install transformers',
               hintStyle: TextStyle(color: AppColors.textTertiary),
               border: InputBorder.none,
             ),
@@ -587,7 +607,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               setState(() => _selectedGpu = 'Medium');
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('✨ Auto-selected Medium GPU based on your requirements'),
+                  content: const Text(
+                    '✨ Auto-selected Medium GPU based on your requirements',
+                  ),
                   backgroundColor: AppColors.cyan,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
@@ -598,7 +620,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             },
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 20),
-              side: BorderSide(color: AppColors.cyan.withOpacity(0.5), width: 2),
+              side: BorderSide(
+                color: AppColors.cyan.withOpacity(0.5),
+                width: 2,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -622,10 +647,11 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         const SizedBox(width: 20),
         Expanded(
           flex: 2,
-          child: GlowingButton(
-            text: 'Start Training',
-            onPressed: _startTraining,
-          ).animate().fadeIn(delay: 800.ms).scale(),
+          child:
+              GlowingButton(
+                text: 'Start Training',
+                onPressed: _startTraining,
+              ).animate().fadeIn(delay: 800.ms).scale(),
         ),
       ],
     );
@@ -704,10 +730,11 @@ class _GPU3DCardState extends State<_GPU3DCard> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCubic,
-          transform: Matrix4.identity()
-            ..setEntry(3, 2, 0.001)
-            ..rotateX(_isHovered ? -0.05 : 0)
-            ..scale(_isHovered ? 1.02 : 1.0),
+          transform:
+              Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateX(_isHovered ? -0.05 : 0)
+                ..scale(_isHovered ? 1.02 : 1.0),
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -715,20 +742,19 @@ class _GPU3DCardState extends State<_GPU3DCard> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: widget.isSelected
-                    ? [
-                  widget.color.withOpacity(0.2),
-                  AppColors.cardBackground,
-                ]
-                    : [
-                  AppColors.cardBackground,
-                  AppColors.cardBackground,
-                ],
+                colors:
+                    widget.isSelected
+                        ? [
+                          widget.color.withOpacity(0.2),
+                          AppColors.cardBackground,
+                        ]
+                        : [AppColors.cardBackground, AppColors.cardBackground],
               ),
               border: Border.all(
-                color: widget.isSelected
-                    ? widget.color
-                    : AppColors.textTertiary.withOpacity(0.2),
+                color:
+                    widget.isSelected
+                        ? widget.color
+                        : AppColors.textTertiary.withOpacity(0.2),
                 width: widget.isSelected ? 2.5 : 1,
               ),
               boxShadow: [
@@ -749,20 +775,24 @@ class _GPU3DCardState extends State<_GPU3DCard> {
               children: [
                 if (widget.isRecommended)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.success,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'RECOMMENDED',
-                      style: AppStyles.body.copyWith(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ).animate(onPlay: (controller) => controller.repeat())
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.success,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'RECOMMENDED',
+                          style: AppStyles.body.copyWith(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                      .animate(onPlay: (controller) => controller.repeat())
                       .shimmer(duration: 2000.ms),
                 if (widget.isRecommended) const SizedBox(height: 16),
 
@@ -780,7 +810,10 @@ class _GPU3DCardState extends State<_GPU3DCard> {
                   widget.title,
                   style: AppStyles.heading2.copyWith(
                     fontSize: 24,
-                    color: widget.isSelected ? widget.color : AppColors.textPrimary,
+                    color:
+                        widget.isSelected
+                            ? widget.color
+                            : AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -793,9 +826,17 @@ class _GPU3DCardState extends State<_GPU3DCard> {
                 ),
                 const SizedBox(height: 20),
 
-                _SpecRow(icon: Icons.sd_card, label: 'VRAM', value: widget.vram),
+                _SpecRow(
+                  icon: Icons.sd_card,
+                  label: 'VRAM',
+                  value: widget.vram,
+                ),
                 const SizedBox(height: 8),
-                _SpecRow(icon: Icons.settings, label: 'Cores', value: widget.cores),
+                _SpecRow(
+                  icon: Icons.settings,
+                  label: 'Cores',
+                  value: widget.cores,
+                ),
                 const SizedBox(height: 20),
 
                 Container(
@@ -819,7 +860,10 @@ class _GPU3DCardState extends State<_GPU3DCard> {
                       '\$${widget.price}',
                       style: AppStyles.heading2.copyWith(
                         fontSize: 28,
-                        color: widget.isSelected ? widget.color : AppColors.textPrimary,
+                        color:
+                            widget.isSelected
+                                ? widget.color
+                                : AppColors.textPrimary,
                       ),
                     ),
                     Text(
@@ -861,10 +905,11 @@ class _GPU3DModel extends StatelessWidget {
       animation: Listenable.merge([rotationController, pulseController]),
       builder: (context, child) {
         return Transform(
-          transform: Matrix4.identity()
-            ..setEntry(3, 2, 0.002)
-            ..rotateY(rotationController.value * 6.28)
-            ..scale(1.0 + pulseController.value * 0.1),
+          transform:
+              Matrix4.identity()
+                ..setEntry(3, 2, 0.002)
+                ..rotateY(rotationController.value * 6.28)
+                ..scale(1.0 + pulseController.value * 0.1),
           alignment: Alignment.center,
           child: SizedBox(
             height: 120,
@@ -904,27 +949,46 @@ class _GPU3DPainter extends CustomPainter {
     final angle = animationValue * 2 * math.pi;
 
     // Base card dimensions based on GPU size
-    final cardWidth = size == GPUSize.small ? 60.0 : size == GPUSize.medium ? 70.0 : 80.0;
-    final cardHeight = size == GPUSize.small ? 40.0 : size == GPUSize.medium ? 50.0 : 60.0;
-    final depth = size == GPUSize.small ? 8.0 : size == GPUSize.medium ? 12.0 : 16.0;
+    final cardWidth =
+        size == GPUSize.small
+            ? 60.0
+            : size == GPUSize.medium
+            ? 70.0
+            : 80.0;
+    final cardHeight =
+        size == GPUSize.small
+            ? 40.0
+            : size == GPUSize.medium
+            ? 50.0
+            : 60.0;
+    final depth =
+        size == GPUSize.small
+            ? 8.0
+            : size == GPUSize.medium
+            ? 12.0
+            : 16.0;
 
     // Paint setup
-    final basePaint = Paint()
-      ..color = color.withOpacity(0.8)
-      ..style = PaintingStyle.fill;
+    final basePaint =
+        Paint()
+          ..color = color.withOpacity(0.8)
+          ..style = PaintingStyle.fill;
 
-    final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.3)
-      ..style = PaintingStyle.fill;
+    final shadowPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.3)
+          ..style = PaintingStyle.fill;
 
-    final highlightPaint = Paint()
-      ..color = color.withOpacity(0.4)
-      ..style = PaintingStyle.fill;
+    final highlightPaint =
+        Paint()
+          ..color = color.withOpacity(0.4)
+          ..style = PaintingStyle.fill;
 
-    final borderPaint = Paint()
-      ..color = isSelected ? color : color.withOpacity(0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+    final borderPaint =
+        Paint()
+          ..color = isSelected ? color : color.withOpacity(0.5)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0;
 
     // Calculate 3D rotation
     final cos = math.cos(angle);
@@ -932,32 +996,63 @@ class _GPU3DPainter extends CustomPainter {
 
     // Shadow
     final shadowPath = Path();
-    shadowPath.addOval(Rect.fromCenter(
-      center: Offset(center.dx, center.dy + cardHeight / 2 + 20),
-      width: cardWidth * 1.2,
-      height: depth * 2,
-    ));
+    shadowPath.addOval(
+      Rect.fromCenter(
+        center: Offset(center.dx, center.dy + cardHeight / 2 + 20),
+        width: cardWidth * 1.2,
+        height: depth * 2,
+      ),
+    );
     canvas.drawPath(shadowPath, shadowPaint);
 
     // Draw GPU card body with 3D effect
-    _drawGPUBody(canvas, center, cardWidth, cardHeight, depth, cos, sin, basePaint, highlightPaint, borderPaint);
+    _drawGPUBody(
+      canvas,
+      center,
+      cardWidth,
+      cardHeight,
+      depth,
+      cos,
+      sin,
+      basePaint,
+      highlightPaint,
+      borderPaint,
+    );
 
     // Draw cooling fans based on GPU size
-    final fanCount = size == GPUSize.small ? 1 : size == GPUSize.medium ? 2 : 3;
-    _drawCoolingFans(canvas, center, cardWidth, cardHeight, fanCount, angle, color);
+    final fanCount =
+        size == GPUSize.small
+            ? 1
+            : size == GPUSize.medium
+            ? 2
+            : 3;
+    _drawCoolingFans(
+      canvas,
+      center,
+      cardWidth,
+      cardHeight,
+      fanCount,
+      angle,
+      color,
+    );
 
     // Draw PCB components
     _drawPCBComponents(canvas, center, cardWidth, cardHeight, size, color);
 
     // Draw glow effect if selected
     if (isSelected) {
-      final glowPaint = Paint()
-        ..color = color.withOpacity(0.3)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+      final glowPaint =
+          Paint()
+            ..color = color.withOpacity(0.3)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
 
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromCenter(center: center, width: cardWidth + 20, height: cardHeight + 20),
+          Rect.fromCenter(
+            center: center,
+            width: cardWidth + 20,
+            height: cardHeight + 20,
+          ),
           const Radius.circular(12),
         ),
         glowPaint,
@@ -965,9 +1060,18 @@ class _GPU3DPainter extends CustomPainter {
     }
   }
 
-  void _drawGPUBody(Canvas canvas, Offset center, double width, double height,
-      double depth, double cos, double sin, Paint basePaint, Paint highlightPaint, Paint borderPaint) {
-
+  void _drawGPUBody(
+    Canvas canvas,
+    Offset center,
+    double width,
+    double height,
+    double depth,
+    double cos,
+    double sin,
+    Paint basePaint,
+    Paint highlightPaint,
+    Paint borderPaint,
+  ) {
     // Main card body
     final bodyRect = RRect.fromRectAndRadius(
       Rect.fromCenter(center: center, width: width, height: height),
@@ -978,22 +1082,35 @@ class _GPU3DPainter extends CustomPainter {
     // 3D depth effect (side panels)
     final sidePath = Path();
     sidePath.moveTo(center.dx + width / 2, center.dy - height / 2);
-    sidePath.lineTo(center.dx + width / 2 + depth * cos, center.dy - height / 2 - depth * sin);
-    sidePath.lineTo(center.dx + width / 2 + depth * cos, center.dy + height / 2 - depth * sin);
+    sidePath.lineTo(
+      center.dx + width / 2 + depth * cos,
+      center.dy - height / 2 - depth * sin,
+    );
+    sidePath.lineTo(
+      center.dx + width / 2 + depth * cos,
+      center.dy + height / 2 - depth * sin,
+    );
     sidePath.lineTo(center.dx + width / 2, center.dy + height / 2);
     sidePath.close();
 
-    final sidePaint = Paint()
-      ..color = basePaint.color.withOpacity(0.6)
-      ..style = PaintingStyle.fill;
+    final sidePaint =
+        Paint()
+          ..color = basePaint.color.withOpacity(0.6)
+          ..style = PaintingStyle.fill;
     canvas.drawPath(sidePath, sidePaint);
 
     // Top panel
     final topPath = Path();
     topPath.moveTo(center.dx - width / 2, center.dy - height / 2);
     topPath.lineTo(center.dx + width / 2, center.dy - height / 2);
-    topPath.lineTo(center.dx + width / 2 + depth * cos, center.dy - height / 2 - depth * sin);
-    topPath.lineTo(center.dx - width / 2 + depth * cos, center.dy - height / 2 - depth * sin);
+    topPath.lineTo(
+      center.dx + width / 2 + depth * cos,
+      center.dy - height / 2 - depth * sin,
+    );
+    topPath.lineTo(
+      center.dx - width / 2 + depth * cos,
+      center.dy - height / 2 - depth * sin,
+    );
     topPath.close();
 
     canvas.drawPath(topPath, highlightPaint);
@@ -1002,9 +1119,15 @@ class _GPU3DPainter extends CustomPainter {
     canvas.drawRRect(bodyRect, borderPaint);
   }
 
-  void _drawCoolingFans(Canvas canvas, Offset center, double cardWidth,
-      double cardHeight, int fanCount, double angle, Color color) {
-
+  void _drawCoolingFans(
+    Canvas canvas,
+    Offset center,
+    double cardWidth,
+    double cardHeight,
+    int fanCount,
+    double angle,
+    Color color,
+  ) {
     final fanRadius = cardHeight / (fanCount * 2.5);
     final spacing = cardWidth / (fanCount + 1);
 
@@ -1015,16 +1138,18 @@ class _GPU3DPainter extends CustomPainter {
       );
 
       // Fan housing
-      final fanPaint = Paint()
-        ..color = color.withOpacity(0.3)
-        ..style = PaintingStyle.fill;
+      final fanPaint =
+          Paint()
+            ..color = color.withOpacity(0.3)
+            ..style = PaintingStyle.fill;
 
       canvas.drawCircle(fanCenter, fanRadius, fanPaint);
 
       // Fan blades
-      final bladePaint = Paint()
-        ..color = color.withOpacity(0.6)
-        ..style = PaintingStyle.fill;
+      final bladePaint =
+          Paint()
+            ..color = color.withOpacity(0.6)
+            ..style = PaintingStyle.fill;
 
       for (int j = 0; j < 6; j++) {
         final bladeAngle = angle * 4 + (j * math.pi / 3);
@@ -1043,22 +1168,34 @@ class _GPU3DPainter extends CustomPainter {
       }
 
       // Fan center
-      final centerPaint = Paint()
-        ..color = color
-        ..style = PaintingStyle.fill;
+      final centerPaint =
+          Paint()
+            ..color = color
+            ..style = PaintingStyle.fill;
       canvas.drawCircle(fanCenter, fanRadius * 0.2, centerPaint);
     }
   }
 
-  void _drawPCBComponents(Canvas canvas, Offset center, double cardWidth,
-      double cardHeight, GPUSize size, Color color) {
-
-    final componentPaint = Paint()
-      ..color = color.withOpacity(0.7)
-      ..style = PaintingStyle.fill;
+  void _drawPCBComponents(
+    Canvas canvas,
+    Offset center,
+    double cardWidth,
+    double cardHeight,
+    GPUSize size,
+    Color color,
+  ) {
+    final componentPaint =
+        Paint()
+          ..color = color.withOpacity(0.7)
+          ..style = PaintingStyle.fill;
 
     // Draw capacitors/chips based on size
-    final componentCount = size == GPUSize.small ? 4 : size == GPUSize.medium ? 6 : 8;
+    final componentCount =
+        size == GPUSize.small
+            ? 4
+            : size == GPUSize.medium
+            ? 6
+            : 8;
     final componentSize = 3.0;
 
     for (int i = 0; i < componentCount; i++) {
@@ -1066,19 +1203,27 @@ class _GPU3DPainter extends CustomPainter {
       final y = center.dy + cardHeight / 4 + (i ~/ 2) * 6;
 
       canvas.drawRect(
-        Rect.fromCenter(center: Offset(x, y), width: componentSize, height: componentSize * 1.5),
+        Rect.fromCenter(
+          center: Offset(x, y),
+          width: componentSize,
+          height: componentSize * 1.5,
+        ),
         componentPaint,
       );
     }
 
     // Power connector
-    final connectorPaint = Paint()
-      ..color = Colors.yellow.withOpacity(0.8)
-      ..style = PaintingStyle.fill;
+    final connectorPaint =
+        Paint()
+          ..color = Colors.yellow.withOpacity(0.8)
+          ..style = PaintingStyle.fill;
 
     canvas.drawRect(
       Rect.fromCenter(
-        center: Offset(center.dx + cardWidth / 2 - 8, center.dy - cardHeight / 3),
+        center: Offset(
+          center.dx + cardWidth / 2 - 8,
+          center.dy - cardHeight / 3,
+        ),
         width: 4,
         height: 12,
       ),
@@ -1167,9 +1312,12 @@ class _ModernFileUploadBoxState extends State<_ModernFileUploadBox> {
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: _isHovered
-                  ? AppColors.cyan
-                  : (hasFile ? AppColors.success : AppColors.cyan.withOpacity(0.2)),
+              color:
+                  _isHovered
+                      ? AppColors.cyan
+                      : (hasFile
+                          ? AppColors.success
+                          : AppColors.cyan.withOpacity(0.2)),
               width: _isHovered ? 2 : 1.5,
             ),
             boxShadow: [
@@ -1189,9 +1337,10 @@ class _ModernFileUploadBoxState extends State<_ModernFileUploadBox> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: hasFile
-                          ? AppColors.success.withOpacity(0.2)
-                          : AppColors.cyan.withOpacity(0.1),
+                      color:
+                          hasFile
+                              ? AppColors.success.withOpacity(0.2)
+                              : AppColors.cyan.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -1229,14 +1378,16 @@ class _ModernFileUploadBoxState extends State<_ModernFileUploadBox> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: hasFile
-                      ? AppColors.success.withOpacity(0.1)
-                      : AppColors.cardBackgroundLight.withOpacity(0.3),
+                  color:
+                      hasFile
+                          ? AppColors.success.withOpacity(0.1)
+                          : AppColors.cardBackgroundLight.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: hasFile
-                        ? AppColors.success.withOpacity(0.3)
-                        : AppColors.textTertiary.withOpacity(0.2),
+                    color:
+                        hasFile
+                            ? AppColors.success.withOpacity(0.3)
+                            : AppColors.textTertiary.withOpacity(0.2),
                     width: 1,
                   ),
                 ),
@@ -1245,7 +1396,8 @@ class _ModernFileUploadBoxState extends State<_ModernFileUploadBox> {
                     Icon(
                       hasFile ? Icons.insert_drive_file : Icons.upload_file,
                       size: 16,
-                      color: hasFile ? AppColors.success : AppColors.textSecondary,
+                      color:
+                          hasFile ? AppColors.success : AppColors.textSecondary,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -1253,7 +1405,10 @@ class _ModernFileUploadBoxState extends State<_ModernFileUploadBox> {
                         widget.fileName ?? 'No file selected',
                         style: AppStyles.body.copyWith(
                           fontSize: 13,
-                          color: hasFile ? AppColors.textPrimary : AppColors.textSecondary,
+                          color:
+                              hasFile
+                                  ? AppColors.textPrimary
+                                  : AppColors.textSecondary,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1274,51 +1429,52 @@ class _ModernDialog extends StatelessWidget {
   final String title;
   final Widget child;
 
-  const _ModernDialog({
-    required this.title,
-    required this.child,
-  });
+  const _ModernDialog({required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 500),
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: AppColors.cyan.withOpacity(0.3),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.cyan.withOpacity(0.2),
-              blurRadius: 40,
-              spreadRadius: 10,
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              blurRadius: 30,
-              offset: const Offset(0, 20),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              style: AppStyles.heading1.copyWith(fontSize: 28),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            child,
-          ],
-        ),
-      ).animate().scale(duration: 300.ms, curve: Curves.easeOutBack).fadeIn(),
+      child:
+          Container(
+                constraints: const BoxConstraints(maxWidth: 500),
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBackground,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: AppColors.cyan.withOpacity(0.3),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.cyan.withOpacity(0.2),
+                      blurRadius: 40,
+                      spreadRadius: 10,
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 30,
+                      offset: const Offset(0, 20),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: AppStyles.heading1.copyWith(fontSize: 28),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    child,
+                  ],
+                ),
+              )
+              .animate()
+              .scale(duration: 300.ms, curve: Curves.easeOutBack)
+              .fadeIn(),
     );
   }
 }
@@ -1342,10 +1498,7 @@ class _InfoRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackgroundLight.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.cyan.withOpacity(0.1),
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.cyan.withOpacity(0.1), width: 1),
       ),
       child: Row(
         children: [
