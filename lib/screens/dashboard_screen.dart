@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,6 +11,8 @@ import 'trainer_screen.dart';
 import 'settings_screen.dart';
 import 'profile_screen.dart';
 import 'dart:math' as math;
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -29,6 +33,12 @@ class _DashboardScreenState extends State<DashboardScreen>
   late AnimationController _rotationController;
   late AnimationController _pulseController;
 
+  String? _currentJobId;
+  String _jobStatus = "idle";
+  String _jobOutput = "";
+  bool _isPolling = false;
+  String? _trainedModelBase64;
+
   @override
   void initState() {
     super.initState();
@@ -45,11 +55,118 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   void dispose() {
+    _isPolling = false; // stop polling loop
     _pythonCodeController.dispose();
     _requirementsController.dispose();
     _rotationController.dispose();
     _pulseController.dispose();
     super.dispose();
+  }
+
+  Widget _buildJobStatusSection() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.cyan.withOpacity(0.3), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Training Status", style: AppStyles.heading2),
+          const SizedBox(height: 16),
+
+          Row(
+            children: [
+              Icon(
+                _jobStatus == "completed"
+                    ? Icons.check_circle
+                    : _jobStatus == "failed"
+                    ? Icons.error
+                    : Icons.autorenew,
+                color:
+                    _jobStatus == "completed"
+                        ? AppColors.success
+                        : _jobStatus == "failed"
+                        ? AppColors.error
+                        : AppColors.cyan,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                _jobStatus.toUpperCase(),
+                style: AppStyles.body.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          if (_jobStatus == "running" || _jobStatus == "queued")
+            const LinearProgressIndicator(),
+
+          const SizedBox(height: 20),
+
+          if (_jobOutput.isNotEmpty)
+            Container(
+              height: 200,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: SingleChildScrollView(
+                child: Text(
+                  _jobOutput,
+                  style: const TextStyle(
+                    fontFamily: "monospace",
+                    color: Colors.greenAccent,
+                  ),
+                ),
+              ),
+            ),
+
+          const SizedBox(height: 20),
+
+          if (_jobStatus == "completed" && _trainedModelBase64 != null)
+            GlowingButton(
+              text: "Download Trained Model",
+              onPressed: _downloadModel,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _downloadModel() async {
+    if (_trainedModelBase64 == null) return;
+
+    try {
+      final bytes = base64Decode(_trainedModelBase64!);
+
+      // Get user Documents folder
+      final directory = await getApplicationDocumentsDirectory();
+
+      final filePath =
+          "${directory.path}/trained_model_${DateTime.now().millisecondsSinceEpoch}.pkl";
+
+      final file = File(filePath);
+      await file.writeAsBytes(bytes);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Model saved to:\n$filePath"),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Download failed: $e"),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   Future<void> _pickFile(bool isDataset) async {
@@ -71,29 +188,73 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Future<void> _startTraining() async {
-    if (_datasetPath == null && _pythonCodeController.text.isEmpty) {
-      _showErrorDialog('Please upload dataset and code');
+    // Must have dataset
+    if (_datasetPath == null) {
+      _showErrorDialog('Please upload a dataset file');
+      return;
+    }
+
+    // Must have model (file OR inline code)
+    if (_useCodeUpload && _modelPath == null) {
+      _showErrorDialog('Please upload a model file');
+      return;
+    }
+
+    if (!_useCodeUpload && _pythonCodeController.text.trim().isEmpty) {
+      _showErrorDialog('Please paste your Python code');
       return;
     }
 
     final confirmed = await _showTrainingConfirmationDialog();
     if (!confirmed) return;
 
-    final success = await ApiService.startTraining(
+    final jobId = await ApiService.startTraining(
       gpuSize: _selectedGpu,
       datasetPath: _datasetPath,
-      modelPath: _modelPath,
-      pythonCode: _useCodeUpload ? null : _pythonCodeController.text,
-      requirements: _requirementsController.text,
+      modelPath: _useCodeUpload ? _modelPath : null,
+      pythonCode: _useCodeUpload ? null : _pythonCodeController.text.trim(),
+      requirements: _requirementsController.text.trim(),
     );
 
-    if (mounted) {
-      if (success != null) {
-        _showSuccessDialog();
-      } else {
-        _showErrorDialog('Failed to start training');
-      }
+    if (!mounted) return;
+
+    if (jobId != null) {
+      setState(() {
+        _currentJobId = jobId;
+        _jobStatus = "queued";
+        _jobOutput = "";
+      });
+
+      _startPollingJob(jobId);
+    } else {
+      _showErrorDialog('Failed to start training');
     }
+  }
+
+  void _startPollingJob(String jobId) {
+    _isPolling = true;
+
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(seconds: 2));
+
+      final jobData = await ApiService.getJobStatus(jobId);
+
+      if (!mounted) return false;
+      if (jobData == null) return true;
+
+      setState(() {
+        _jobStatus = jobData['status'] ?? "unknown";
+        _jobOutput = jobData['result'] ?? jobData['error'] ?? "";
+        _trainedModelBase64 = jobData['model_file'];
+      });
+
+      if (_jobStatus == "completed" || _jobStatus == "failed") {
+        _isPolling = false;
+        return false;
+      }
+
+      return true;
+    });
   }
 
   Future<bool> _showTrainingConfirmationDialog() async {
@@ -328,6 +489,12 @@ class _DashboardScreenState extends State<DashboardScreen>
           _buildDependenciesSection(),
           const SizedBox(height: 48),
           _buildActionButtons(),
+
+          // ✅ ADD THIS
+          if (_currentJobId != null) ...[
+            const SizedBox(height: 60),
+            _buildJobStatusSection(),
+          ],
         ],
       ),
     );
@@ -661,7 +828,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget build(BuildContext context) {
     final pages = [
       _buildTrainModelPage(),
-      const TrainerScreen(),
+      TrainerScreen(),
       const SettingsScreen(),
       const ProfileScreen(),
     ];
