@@ -3,7 +3,7 @@ import 'dart:convert';
 
 class ApiService {
   static const String baseUrl = "http://localhost:8000";
-  static const String workerBaseUrl = "http://localhost:9000";
+  static const String workerBaseUrl = "http://localhost:8001";
 
   static Future<bool> startLocalWorker() async {
     try {

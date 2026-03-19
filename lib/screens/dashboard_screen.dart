@@ -258,7 +258,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Future<bool> _showTrainingConfirmationDialog() async {
-    final gpuPrices = {'Small': 0.50, 'Medium': 1.20, 'Large': 2.50};
+    final gpuPrices = {'Small': 20, 'Medium': 50, 'Large': 100};
     final price = gpuPrices[_selectedGpu]!;
 
     return await showDialog<bool>(
@@ -304,7 +304,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '\$$price/hour',
+                            '\₹$price/hour',
                             style: AppStyles.body.copyWith(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -570,9 +570,9 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: _GPU3DCard(
                 title: 'Small',
                 subtitle: 'Light Tasks',
-                vram: '8GB',
+                vram: '4-8GB',
                 cores: '4',
-                price: '0.50',
+                price: '20',
                 isSelected: _selectedGpu == 'Small',
                 onTap: () => setState(() => _selectedGpu = 'Small'),
                 color: Colors.blue,
@@ -586,9 +586,9 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: _GPU3DCard(
                 title: 'Medium',
                 subtitle: 'Recommended',
-                vram: '16GB',
+                vram: '8-16GB',
                 cores: '8',
-                price: '1.20',
+                price: '50',
                 isSelected: _selectedGpu == 'Medium',
                 onTap: () => setState(() => _selectedGpu = 'Medium'),
                 color: AppColors.cyan,
@@ -603,9 +603,9 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: _GPU3DCard(
                 title: 'Large',
                 subtitle: 'Heavy Workloads',
-                vram: '24GB',
+                vram: '16-24GB',
                 cores: '12',
-                price: '2.50',
+                price: '100',
                 isSelected: _selectedGpu == 'Large',
                 onTap: () => setState(() => _selectedGpu = 'Large'),
                 color: AppColors.cyanDark,
@@ -1024,7 +1024,7 @@ class _GPU3DCardState extends State<_GPU3DCard> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '\$${widget.price}',
+                      '\₹${widget.price}',
                       style: AppStyles.heading2.copyWith(
                         fontSize: 28,
                         color:
