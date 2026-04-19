@@ -1,9 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = "http://localhost:8000";
-  static const String workerBaseUrl = "http://localhost:8001";
+  static const String baseUrl = "http://100.119.34.103:8000";
+  static const String workerBaseUrl = "http://localhost:9000";
 
   static Future<bool> startLocalWorker() async {
     try {
@@ -11,7 +13,7 @@ class ApiService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print("Worker start error: $e");
+      // print("Worker start error: $e");
       return false;
     }
   }
@@ -22,7 +24,7 @@ class ApiService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print("Worker stop error: $e");
+      // print("Worker stop error: $e");
       return false;
     }
   }
@@ -36,6 +38,7 @@ class ApiService {
       }
     } catch (e) {
       print("Worker status error: $e");
+      print("Hello");
     }
     return null;
   }
@@ -53,7 +56,13 @@ class ApiService {
 
   static Future<Map<String, dynamic>?> getJobStatus(String jobId) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/job/$jobId'));
+      final url = '$baseUrl/job/$jobId';
+      print("Polling URL: $url");
+
+      final response = await http.get(Uri.parse(url));
+
+      print("Status code: ${response.statusCode}");
+      print("Raw response: ${response.body}");
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -64,10 +73,13 @@ class ApiService {
     return null;
   }
 
+
   static Future<String?> startTraining({
     required String gpuSize,
-    required String? datasetPath,
-    required String? modelPath,
+    required Uint8List? datasetBytes,
+    required String? datasetFileName,
+    required Uint8List? modelBytes,
+    required String? modelFileName,
     required String? pythonCode,
     required String requirements,
   }) async {
@@ -84,15 +96,25 @@ class ApiService {
         request.fields['python_code'] = pythonCode;
       }
 
-      if (datasetPath != null) {
+      // DATASET FILE
+      if (datasetBytes != null && datasetFileName != null) {
         request.files.add(
-          await http.MultipartFile.fromPath('dataset', datasetPath),
+          http.MultipartFile.fromBytes(
+            'dataset',
+            datasetBytes,
+            filename: datasetFileName,
+          ),
         );
       }
 
-      if (modelPath != null) {
+      // MODEL FILE
+      if (modelBytes != null && modelFileName != null) {
         request.files.add(
-          await http.MultipartFile.fromPath('model_file', modelPath),
+          http.MultipartFile.fromBytes(
+            'model_file',
+            modelBytes,
+            filename: modelFileName,
+          ),
         );
       }
 

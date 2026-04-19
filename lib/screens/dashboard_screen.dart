@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -11,8 +14,9 @@ import 'trainer_screen.dart';
 import 'settings_screen.dart';
 import 'profile_screen.dart';
 import 'dart:math' as math;
-import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'dart:html' as html;
+
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -32,6 +36,13 @@ class _DashboardScreenState extends State<DashboardScreen>
   bool _useCodeUpload = true;
   late AnimationController _rotationController;
   late AnimationController _pulseController;
+
+  Uint8List? _datasetBytes;
+  Uint8List? _modelBytes;
+
+  String? _datasetFileName;
+  String? _modelFileName;
+
 
   String? _currentJobId;
   String _jobStatus = "idle";
@@ -141,61 +152,48 @@ class _DashboardScreenState extends State<DashboardScreen>
   Future<void> _downloadModel() async {
     if (_trainedModelBase64 == null) return;
 
-    try {
-      final bytes = base64Decode(_trainedModelBase64!);
+    final bytes = base64Decode(_trainedModelBase64!);
 
-      // Get user Documents folder
-      final directory = await getApplicationDocumentsDirectory();
+    final blob = html.Blob([bytes]);
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute("download", "trained_model.pkl")
+      ..click();
 
-      final filePath =
-          "${directory.path}/trained_model_${DateTime.now().millisecondsSinceEpoch}.pkl";
-
-      final file = File(filePath);
-      await file.writeAsBytes(bytes);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Model saved to:\n$filePath"),
-          backgroundColor: AppColors.success,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Download failed: $e"),
-          backgroundColor: AppColors.error,
-        ),
-      );
-    }
+    html.Url.revokeObjectUrl(url);
   }
 
+
   Future<void> _pickFile(bool isDataset) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions:
-          isDataset ? ['csv', 'zip', 'json', 'txt'] : ['py', 'ipynb'],
+    final result = await FilePicker.platform.pickFiles(
+      withData: true, // IMPORTANT
     );
 
     if (result != null) {
+      final file = result.files.single;
+
       setState(() {
         if (isDataset) {
-          _datasetPath = result.files.single.path;
+          _datasetBytes = file.bytes;
+          _datasetFileName = file.name;
         } else {
-          _modelPath = result.files.single.path;
+          _modelBytes = file.bytes;
+          _modelFileName = file.name;
         }
       });
     }
   }
 
+
   Future<void> _startTraining() async {
     // Must have dataset
-    if (_datasetPath == null) {
+    if (_datasetBytes == null) {
       _showErrorDialog('Please upload a dataset file');
       return;
     }
 
     // Must have model (file OR inline code)
-    if (_useCodeUpload && _modelPath == null) {
+    if (_useCodeUpload && _modelBytes == null) {
       _showErrorDialog('Please upload a model file');
       return;
     }
@@ -210,8 +208,10 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     final jobId = await ApiService.startTraining(
       gpuSize: _selectedGpu,
-      datasetPath: _datasetPath,
-      modelPath: _useCodeUpload ? _modelPath : null,
+      datasetBytes: _datasetBytes,
+      datasetFileName: _datasetFileName,
+      modelBytes: _useCodeUpload ? _modelBytes : null,
+      modelFileName: _useCodeUpload ? _modelFileName : null,
       pythonCode: _useCodeUpload ? null : _pythonCodeController.text.trim(),
       requirements: _requirementsController.text.trim(),
     );
@@ -230,6 +230,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       _showErrorDialog('Failed to start training');
     }
   }
+
 
   void _startPollingJob(String jobId) {
     _isPolling = true;
@@ -318,13 +319,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                     _InfoRow(
                       icon: Icons.dataset,
                       label: 'Dataset',
-                      value: _datasetPath?.split('/').last ?? 'Code only',
+                      value: _datasetFileName ?? 'Not selected',
                     ),
                     const SizedBox(height: 12),
                     _InfoRow(
                       icon: Icons.code,
                       label: 'Model',
-                      value: _modelPath?.split('/').last ?? 'Inline code',
+                      value: _modelFileName ?? 'Inline code',
                     ),
                     const SizedBox(height: 24),
                     Container(
@@ -570,7 +571,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: _GPU3DCard(
                 title: 'Small',
                 subtitle: 'Light Tasks',
-                vram: '4-8GB',
+                vram: '4-8 GB',
                 cores: '4',
                 price: '20',
                 isSelected: _selectedGpu == 'Small',
@@ -586,7 +587,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: _GPU3DCard(
                 title: 'Medium',
                 subtitle: 'Recommended',
-                vram: '8-16GB',
+                vram: '8-16 GB',
                 cores: '8',
                 price: '50',
                 isSelected: _selectedGpu == 'Medium',
@@ -603,7 +604,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: _GPU3DCard(
                 title: 'Large',
                 subtitle: 'Heavy Workloads',
-                vram: '16-24GB',
+                vram: '16-24 GB',
                 cores: '12',
                 price: '100',
                 isSelected: _selectedGpu == 'Large',
@@ -634,7 +635,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     label: 'Training Dataset',
                     subtitle: 'CSV, ZIP, JSON, TXT',
                     icon: Icons.dataset,
-                    fileName: _datasetPath?.split('/').last,
+                    fileName: _datasetFileName,
                     onTap: () => _pickFile(true),
                   ).animate().fadeIn(delay: 400.ms).slideX(),
             ),
@@ -645,7 +646,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     label: 'Model Code',
                     subtitle: 'Python (.py, .ipynb)',
                     icon: Icons.code,
-                    fileName: _modelPath?.split('/').last,
+                    fileName: _modelFileName,
                     onTap: () => _pickFile(false),
                   ).animate().fadeIn(delay: 500.ms).slideX(),
             ),
